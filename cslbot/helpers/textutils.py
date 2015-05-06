@@ -254,20 +254,15 @@ def gen_translate(msg, config, outputlang='en'):
 
 def gen_random_translate(msg, config):
     # FIXME: don't hard-code this.
-    langs = {'ar': 'Arabic', 'bs-Latn': 'Bosnian (Latin)', 'bg': 'Bulgarian', 'ca': 'Catalan',
-             'zh-CHS': 'Chinese Simplified', 'zh-CHT': 'Chinese Traditional', 'hr': 'Croatian',
-             'cs': 'Czech', 'da': 'Danish', 'nl': 'Dutch', 'en': 'English', 'et': 'Estonian',
-             'fi': 'Finnish', 'fr': 'French', 'de': 'German', 'el': 'Greek', 'ht': 'Haitian Creole',
-             'he': 'Hebrew', 'hi': 'Hindi', 'mww': 'Hmong Daw', 'hu': 'Hungarian', 'id': 'Indonesian',
-             'it': 'Italian', 'ja': 'Japanese', 'tlh': 'Klingon', 'tlh-Qaak': 'Klingon (pIqaD)',
-             'ko': 'Korean', 'lv': 'Latvian', 'lt': 'Lithuanian', 'ms': 'Malay', 'mt': 'Maltese',
-             'no': 'Norwegian', 'fa': 'Persian', 'pl': 'Polish', 'pt': 'Portugese', 'otq': 'Querétaro Otomi',
-             'ro': 'Romanian', 'ru': 'Russian', 'sr-Cyrl': 'Serbian (Cyrillic)', 'sr-Latn': 'Serbian (Latin)',
-             'sk': 'Slovak', 'sl': 'Slovenian', 'es': 'Spanish', 'sv': 'Swedish', 'th': 'Thai', 'tr': 'Turkish',
-             'uk': 'Ukranian', 'ur': 'Urdu', 'vi': 'Vietnamese', 'cy': 'Welsh', 'yua': 'Yucatec Maya'}
-    outputlang = choice(list(langs.keys()))
+    token = get_token(config['api']['translateid'], config['api']['translatesecret'])
+    headers = {'Authorization': 'Bearer %s' % token}
+    data = get('http://api.microsofttranslator.com/V2/Http.svc/GetLanguagesForTranslate', headers=headers)
+    langs = [x.text for x in fromstring(data.text)[:]]
+    outputlang = choice(langs)
     translation = gen_translate(msg, config, outputlang)
-    return "%s (%s)" % (translation, langs[outputlang])
+    params = {'languageCodes': outputlang, 'locale': 'en'}
+    langdata = post('http://api.microsofttranslator.com/v2/Http.svc/GetLanguageNames', params=params, headers=headers)
+    return "%s (%s)" % (translation, outputlang)
 
 
 def append_filters(filters):
